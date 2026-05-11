@@ -1,32 +1,44 @@
-const cacheName = "waterpass";
-const assets = [
-  "index.html",
-  "manifest.json",
-  "sw.js",
+const CACHE_NAME = 'waterpass-uin-v1';
+const ASSETS_TO_CACHE = [
+  './',
+  './index.html',
+  './manifest.json',
+  // Tambahkan path ikon jika sudah ada, contoh:
+  // './icon-192.png',
+  // './icon-512.png'
 ];
 
-self.addEventListener("install", (e) => {
-  e.waitUntil(
-    caches.open(cacheName).then((cache) => {
-      return cache.addAll(assets);
+// Tahap Install: Menyimpan file ke dalam Cache
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => {
+      console.log('Caching assets...');
+      return cache.addAll(ASSETS_TO_CACHE);
     })
   );
 });
 
-self.addEventListener("activate", (e) => {
-  e.waitUntil(
-    caches.keys().then((keys) => {
+// Tahap Aktifasi: Membersihkan cache lama jika ada pembaruan
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then((cacheNames) => {
       return Promise.all(
-        keys.filter((key) => key !== cacheName).map((key) => caches.delete(key))
+        cacheNames.map((cache) => {
+          if (cache !== CACHE_NAME) {
+            console.log('Deleting old cache...');
+            return caches.delete(cache);
+          }
+        })
       );
-    }).then(() => self.clients.claim())
+    })
   );
 });
 
-self.addEventListener("fetch", (e) => {
-  e.respondWith(
-    caches.match(e.request).then((res) => {
-      return res || fetch(e.request);
+// Strategi Fetch: Ambil dari cache dulu, jika gagal baru ambil dari jaringan (Cache First)
+self.addEventListener('fetch', (event) => {
+  event.respondWith(
+    caches.match(event.request).then((response) => {
+      return response || fetch(event.request);
     })
   );
-});sw
+});
