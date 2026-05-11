@@ -1,9 +1,30 @@
 {
-  "short_name": "Waterpass",
-  "name": "Waterpass Digital",
-  "start_url": "/Waterpass/index.html",
+  "short_name": "Waterpass UIN",
+  "name": "Waterpass Digital - UIN Kiai Ageng Mohammad Besari",
+  "description": "Alat ukur kerataan digital berbasis sensor gyroscope untuk kebutuhan konstruksi dan teknis.",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    },
+    {
+      "src": "icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "maskable"
+    }
+  ],
+  "start_url": "./index.html",
+  "background_color": "#0f2027",
   "display": "standalone",
-  "theme_color": "#0a0c12",
-  "background_color": "#ffffff",
-  "scope": "/Waterpass/"
+  "scope": "./",
+  "theme_color": "#2c5364",
+  "orientation": "portrait",
+  "lang": "id"
 }
