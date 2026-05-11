@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Waterpass Digital - UIN Kiai Ageng Mohammad Besari</title>
+
+<style>
+
+body{
+margin:0;
+font-family:Arial;
+background:linear-gradient(135deg,#0f2027,#203a43,#2c5364);
+color:white;
+text-align:center;
+}
+
+.header{
+padding:20px;
+font-size:24px;
+font-weight:bold;
+}
+
+.sub{
+font-size:16px;
+opacity:0.8;
+}
+
+.card{
+margin:auto;
+margin-top:10px;
+width:390px;
+padding:20px;
+border-radius:25px;
+background:white;
+color:black;
+box-shadow:0px 15px 40px rgba(0,0,0,0.4);
+}
+
+.level{
+width:330px;
+height:110px;
+margin:auto;
+border-radius:60px;
+border:8px solid gold;
+background:linear-gradient(#c8f7ff,#eaffff);
+position:relative;
+overflow:hidden;
+box-shadow:inset 0px 0px 25px rgba(0,0,0,0.3);
+}
+
+.centerLine{
+position:absolute;
+left:50%;
+width:3px;
+height:100%;
+background:red;
+transform:translateX(-50%);
+}
+
+.target{
+position:absolute;
+left:50%;
+top:15px;
+width:50px;
+height:80px;
+border:3px solid black;
+transform:translateX(-50%);
+border-radius:30px;
+transition:0.3s;
+}
+
+.targetOK{
+border:3px solid green;
+box-shadow:0px 0px 15px green;
+}
+
+.bubble{
+width:60px;
+height:60px;
+border-radius:50%;
+position:absolute;
+top:25px;
+left:130px;
+background:radial-gradient(circle at 30% 30%,white,#b4ffb4,#00cc00);
+}
+
+.circle{
+margin:auto;
+margin-top:20px;
+width:180px;
+height:180px;
+border-radius:50%;
+border:8px solid gold;
+background:linear-gradient(#c8f7ff,#eaffff);
+position:relative;
+box-shadow:inset 0px 0px 20px rgba(0,0,0,0.3);
+}
+
+.centerDot{
+position:absolute;
+width:10px;
+height:10px;
+background:red;
+left:50%;
+top:50%;
+transform:translate(-50%,-50%);
+border-radius:50%;
+}
+
+.bubble2{
+position:absolute;
+width:40px;
+height:40px;
+border-radius:50%;
+background:radial-gradient(circle at 30% 30%,white,#b4ffb4,#00cc00);
+left:70px;
+top:70px;
+}
+
+.sensorBox{
+margin-top:15px;
+background:#111;
+color:#0f0;
+padding:10px;
+border-radius:10px;
+font-family:monospace;
+}
+
+.info{
+margin-top:10px;
+font-size:22px;
+font-weight:bold;
+}
+
+.bar{
+width:100%;
+height:20px;
+background:#ddd;
+border-radius:10px;
+margin-top:10px;
+overflow:hidden;
+}
+
+.fill{
+height:100%;
+width:0%;
+background:green;
+}
+
+canvas{
+margin-top:10px;
+border:1px solid #aaa;
+}
+
+button{
+margin-top:10px;
+padding:10px 20px;
+border:none;
+border-radius:10px;
+background:#2a5298;
+color:white;
+font-size:16px;
+cursor:pointer;
+}
+
+.rata{color:green}
+.miring{color:red}
+
+.footer{
+margin-top:10px;
+font-size:12px;
+opacity:0.7;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="header">
+Waterpass Digital
+<div class="sub">
+UIN Kiai Ageng Mohammad Besari
+</div>
+</div>
+
+<div class="card">
+
+<div class="level">
+<div class="centerLine"></div>
+<div id="target" class="target"></div>
+<div id="bubble" class="bubble"></div>
+</div>
+
+<div class="circle">
+<div class="centerDot"></div>
+<div id="bubble2" class="bubble2"></div>
+</div>
+
+<div id="status" class="info">
+Tekan Aktifkan Sensor
+</div>
+
+<button onclick="aktifkanSensor()">Aktifkan Sensor</button>
+<button onclick="kalibrasi()">Set Rata</button>
+<button onclick="kalibrasiKamera()">Kalibrasi Kamera</button>
+
+<div id="kameraInfo">Kompensasi Kamera: OFF</div>
+
+<div class="bar">
+<div id="fill" class="fill"></div>
+</div>
+
+<div id="precision">Presisi: -</div>
+<div id="stability">Stabilitas: -</div>
+
+<div id="derajat">Derajat Kemiringan : 0.00°</div>
+<div id="error">Error Kerataan : 0.00°</div>
+
+<div class="sensorBox">
+Gamma (X): <span id="gx">0</span><br>
+Beta (Y): <span id="gy">0</span>
+</div>
+
+<canvas id="grafik" width="320" height="100"></canvas>
+
+<div class="footer">Sensor Kemiringan HP</div>
+
+</div>
+
+<script>
+
+let offsetX=0;
+let offsetY=0;
+
+let camOffsetX=0;
+let camOffsetY=0;
+let kameraAktif=false;
+
+let currentX=0;
+let currentY=0;
+
+let bx=130;
+let by=70;
+
+let targetX=130;
+let targetY=70;
+
+let data=[];
+
+function kalibrasi(){
+offsetX=currentX;
+offsetY=currentY;
+}
+
+function kalibrasiKamera(){
+camOffsetX=currentX;
+camOffsetY=currentY;
+kameraAktif=true;
+
+document.getElementById("kameraInfo").innerHTML=
+"Kompensasi Kamera: AKTIF ✓";
+}
+
+function aktifkanSensor(){
+
+if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+
+DeviceOrientationEvent.requestPermission()
+.then(permissionState => {
+if(permissionState === 'granted'){
+startSensor();
+}
+})
+
+}else{
+startSensor();
+}
+
+}
+
+function startSensor(){
+
+let bubble=document.getElementById("bubble");
+let bubble2=document.getElementById("bubble2");
+let fill=document.getElementById("fill");
+let precision=document.getElementById("precision");
+let stability=document.getElementById("stability");
+let status=document.getElementById("status");
+let target=document.getElementById("target");
+let gx=document.getElementById("gx");
+let gy=document.getElementById("gy");
+
+let derajatBox=document.getElementById("derajat");
+let errorBox=document.getElementById("error");
+
+let canvas=document.getElementById("grafik");
+let ctx=canvas.getContext("2d");
+
+window.addEventListener("deviceorientation",function(e){
+
+if(e.gamma==null)return;
+
+currentX=e.gamma;
+currentY=e.beta;
+
+let x=e.gamma-offsetX;
+let y=e.beta-offsetY;
+
+if(kameraAktif){
+x = x - camOffsetX;
+y = y - camOffsetY;
+}
+
+/* tampil sensor */
+gx.innerHTML=currentX.toFixed(2);
+gy.innerHTML=currentY.toFixed(2);
+
+/* hitung */
+let derajat=Math.sqrt(x*x+y*y);
+let error=(Math.abs(x)+Math.abs(y))/2;
+
+derajatBox.innerHTML="Derajat Kemiringan : "+derajat.toFixed(2)+"°";
+errorBox.innerHTML="Error Kerataan : "+error.toFixed(2)+"°";
+
+/* posisi */
+targetX=130+(x*2);
+targetY=70+(y*2);
+
+/* status */
+if(derajat<1){
+status.innerHTML="RATA ✓";
+status.className="info rata";
+target.className="target targetOK";
+}else{
+status.innerHTML="MIRING";
+status.className="info miring";
+target.className="target";
+}
+
+/* akurasi */
+let akurasi=100-(derajat*10);
+if(akurasi<0)akurasi=0;
+fill.style.width=akurasi+"%";
+
+/* presisi */
+if(derajat<0.5)
+precision.innerHTML="Presisi Tukang: Sangat Presisi";
+else if(derajat<2)
+precision.innerHTML="Presisi Tukang: Presisi";
+else
+precision.innerHTML="Presisi Tukang: Kurang Presisi";
+
+/* stabilitas */
+data.push(x);
+if(data.length>20)data.shift();
+
+let rata=0;
+for(let i of data)rata+=i;
+rata=rata/data.length;
+
+let dev=Math.abs(x-rata);
+
+if(dev<0.3)
+stability.innerHTML="Stabilitas: Stabil";
+else
+stability.innerHTML="Stabilitas: Bergerak";
+
+/* grafik */
+ctx.clearRect(0,0,320,100);
+ctx.beginPath();
+
+for(let i=0;i<data.length;i++){
+let y1=50-data[i]*10;
+ctx.lineTo(i*16,y1);
+}
+
+ctx.stroke();
+
+});
+
+/* animasi */
+setInterval(function(){
+bx+=(targetX-bx)*0.2;
+by+=(targetY-by)*0.2;
+
+bubble.style.left=bx+"px";
+bubble2.style.left=(bx-60)+"px";
+bubble2.style.top=by+"px";
+
+},20);
+
+}
+
+</script>
+
+</body>
+</html>
